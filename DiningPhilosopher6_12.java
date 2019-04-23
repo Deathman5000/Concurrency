@@ -1,5 +1,5 @@
 /*
-  Program: DiningPhilosopherTest.java
+  Program: DiningPhilosopher6_12.java
   Authors: James Hund, TJ Moore
   Version: 04/22/19
   Description: This program is an implementation of Algorithm 6.12 for the
@@ -10,7 +10,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.Semaphore;
-public class DiningPhilosopherTest {
+public class DiningPhilosopher6_12 {
   public static void main(String[] args) {
     // initializes number of rounds and philosophers
     int rounds = Integer.parseInt(args[0]);

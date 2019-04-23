@@ -22,8 +22,8 @@ public class DiningPhilosopher6_10{
     }
     // Creating and initializing Philosophers
     Philosopher[] philosophers = new Philosopher[n];
-    for(int i=0;i<n-1;i++){
-      philosophers[i] = new Philosopher("P: "+i+" -", fork[i], fork[i+1], rounds);
+    for(int i=0;i<n;i++){
+      philosophers[i] = new Philosopher("P: "+i+" -", fork[i], fork[(i+1)%n], rounds);
     }
     for(int i=0;i<philosophers.length;i++){
       log.record("Philosopher "+i+" has entered the battle");
