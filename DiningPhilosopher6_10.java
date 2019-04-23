@@ -6,6 +6,10 @@
                "Dining Philosophers Problem". It takes as arguments the number
                of rounds and number of philosophers in that order.
  */
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore;
 public class DiningPhilosopher6_10{
   //This takes in the arguments.
   public static void main(String[] args) {
@@ -31,30 +35,35 @@ public class DiningPhilosopher6_10{
 
 //This class defines what a fork is.
 class Fork{
-  public boolean used;
+  public Semaphore fork = new Semaphore(1);
   public String name;
 
-  public Fork(){
-  }
   public Fork(String fname){
     this.name = fname;
   }
 
-  public synchronized void take() {
-    log.record("Fork "+name+" is being used");
-    this.used = true;
+  // to get fork
+  public boolean take(String s) {
+    try{
+        fork.acquire();
+        // for output
+        log.record("Fork "+name+" is being used by "+s);
+        return true;
+      }
+      catch(Exception e){return false;}
   }
 
-  public synchronized void release() {
-    log.record("Fork "+name+" is being released");
-    this.used = false;
+  // to release fork
+  public void release(String s) {
+    // for output
+    log.record("Fork "+name+" is being released by "+s);
+    fork.release();
   }
 }
 //Defines what a philosopher is and gives each Philosopher a different thread.
 class Philosopher extends Thread {
   private Fork First;
   private Fork Second;
-  private boolean hasFork = false;
   private String name;
   private int round;
  // This defines the philosopher and gives them arguments of name, forks, and rounds
@@ -76,22 +85,15 @@ class Philosopher extends Thread {
     }
   }
  //Starts the process for each philosopher
-  public void run(){
+ public void run(){
     for(int i=0; i<=round; i++){
       think();
-      // looks for first fork
-      if(! First.used) {
-        First.take();
-        hasFork=true;
-      }
-      // looks to see if second fork is free and if first fork is already taken by this instance
-      if(! Second.used && hasFork) {
-        Second.take();
-        eat();
-        // releasing the forks
-        First.release();
-        Second.release();
-        hasFork=false;
+      if(First.take(name)){
+        if(Second.take(name)){
+          eat();
+          First.release(name);
+          Second.release(name);
+        }
       }
     }
   }
