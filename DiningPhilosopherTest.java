@@ -6,6 +6,10 @@
                "Dining Philosophers Problem". It takes as arguments the number
                of rounds and number of philosophers in that order.
  */
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore;
 public class DiningPhilosopherTest {
   public static void main(String[] args) {
     // initializes number of rounds and philosophers
@@ -22,7 +26,7 @@ public class DiningPhilosopherTest {
       philosophers[i] = new Philosopher("P: "+i+" -", fork[i], fork[i+1], rounds);
     }
     // nth Philosopher grabs from the opposite side first
-    philosophers[n-1] = new Philosopher("P: 4 - ",fork[0],fork[n-1],rounds);
+    philosophers[n-1] = new Philosopher("P: "+(n-1)+" -",fork[0],fork[n-1],rounds);
     for(int i=0;i<philosophers.length;i++){
       log.record("Philosopher "+i+" has entered the battle");
       Thread t= new Thread( philosophers[i]);
@@ -33,30 +37,35 @@ public class DiningPhilosopherTest {
 
 // fork class
 class Fork{
-  public boolean used;
+  public Semaphore fork = new Semaphore(1);
   public String name;
 
   public Fork(String fname){
     this.name = fname;
   }
 
-  public synchronized void take() {
-    // for output
-    log.record("Fork "+name+" is being used");
-    this.used = true;
+  // to get fork
+  public boolean take(String s) {
+    try{
+        fork.acquire();
+        // for output
+        log.record("Fork "+name+" is being used by "+s);
+        return true;
+      }
+      catch(Exception e){return false;}
   }
 
-  public synchronized void release() {
+  // to release fork
+  public void release(String s) {
     // for output
-    log.record("Fork "+name+" is being released");
-    this.used = false;
+    log.record("Fork "+name+" is being released by "+s);
+    fork.release();
   }
 }
   
 class Philosopher extends Thread {
   private Fork First;
   private Fork Second;
-  private boolean hasFork = false;
   private String name;
   private int round;
 
@@ -72,20 +81,12 @@ class Philosopher extends Thread {
   public void run(){
     for(int i=0; i<=round; i++){
       think();
-
-      // looks for first fork
-      if(! First.used) {
-        First.take();
-        hasFork=true;
-      }
-      // looks to see if second fork is free and if first fork is already taken by this instance
-      if(! Second.used && hasFork) {
-        Second.take();
-        eat();
-        // releasing the forks
-        First.release();
-        Second.release();
-        hasFork=false;
+      if(First.take(name)){
+        if(Second.take(name)){
+          eat();
+          First.release(name);
+          Second.release(name);
+        }
       }
     }
   }
