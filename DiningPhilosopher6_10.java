@@ -88,6 +88,7 @@ class Philosopher extends Thread {
     // must try to take the left fork first.
     if(! First.used){
       First.take(); //left fork
+     if(! Second.used){
       Second.take(); //right fork
       log.record(name + " eat"); // sends the eat command to a log for later output
       //philosopher eats for a random amount of time
@@ -99,6 +100,7 @@ class Philosopher extends Thread {
       First.release(); // release left fork
       Second.release(); // release right fork
     }
+  }
   }
 }
 //prints out the log of all that is done in the program.
