@@ -11,15 +11,16 @@ public class DiningPhilosopher6_10{
   public static void main(String[] args) {
     int rounds = Integer.parseInt(args[0]);
     int n = Integer.parseInt(args[1]);
+    // Creating and initializing forks
     Fork[] fork = new Fork[n];
     for(int i = 0; i < fork.length; i++){
       fork[i] = new Fork("F: " + i);
     }
+    // Creating and initializing Philosophers
     Philosopher[] philosophers = new Philosopher[n];
     for(int i=0;i<n-1;i++){
       philosophers[i] = new Philosopher("P: "+i+" -", fork[i], fork[i+1], rounds);
     }
-    philosophers[n-1] = new Philosopher("P: "+(n-1)+" -",fork[0],fork[n-1],rounds);
     for(int i=0;i<philosophers.length;i++){
       log.record("Philosopher "+i+" has entered the battle");
       Thread t= new Thread( philosophers[i]);
@@ -53,12 +54,11 @@ class Fork{
 class Philosopher extends Thread {
   private Fork First;
   private Fork Second;
+  private boolean hasFork = false;
   private String name;
-  private int state;
   private int round;
  // This defines the philosopher and gives them arguments of name, forks, and rounds
   public Philosopher(String name, Fork left, Fork right, int rounds) {
-    this.state = 1;
     this.name = name;
     Second = left;
     First = right;
@@ -66,7 +66,6 @@ class Philosopher extends Thread {
   }
   //Defines the think method
   public void think() {
-    this.state = 1;
     // sends the think command to a log for later output
     log.record(name + " think");
     // tries to a philosopher to think for a random amount of time.
@@ -80,28 +79,33 @@ class Philosopher extends Thread {
   public void run(){
     for(int i=0; i<=round; i++){
       think();
-      eat();
+      // looks for first fork
+      if(! First.used) {
+        First.take();
+        hasFork=true;
+      }
+      // looks to see if second fork is free and if first fork is already taken by this instance
+      if(! Second.used && hasFork) {
+        Second.take();
+        eat();
+        // releasing the forks
+        First.release();
+        Second.release();
+        hasFork=false;
+      }
     }
   }
   // defines the eat method.
   public void eat(){
-    // must try to take the left fork first.
-    if(! First.used){
-      First.take(); //left fork
-     if(! Second.used){
-      Second.take(); //right fork
-      log.record(name + " eat"); // sends the eat command to a log for later output
-      //philosopher eats for a random amount of time
-      try {
-        sleep((int)(Math.random() * 100));
-      }
-      catch(InterruptedException e){
-      }
-      First.release(); // release left fork
-      Second.release(); // release right fork
+    // for output
+    log.record(name + " eat");
+    try {
+      sleep((int)(Math.random() * 100));
+    }
+    catch(InterruptedException e){
     }
   }
-  }
+  
 }
 //prints out the log of all that is done in the program.
 class log{
